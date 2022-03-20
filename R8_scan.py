@@ -1,5 +1,9 @@
 #!/usr/bin/env python3.7
 
+# Version 2.0
+# March 20 2022
+
+
 import RPi.GPIO as GPIO
 from picamera import PiCamera
 from picamera.array import PiRGBArray
@@ -12,20 +16,22 @@ import subprocess
 import sys
 
 
+# Stepper motor settings
 DIR = 27   # Direction GPIO Pin
 STEP = 22  # Step GPIO Pin
 CW = 1     # Clockwise Rotation
 CCW = 0    # Counterclockwise Rotation
 STEPON = 0  # pin to turn on/off the stepper
 
-# CROP SETTINGS 
+# crop frame settings
 ycal = 500  # calibrate camera frame y position 0=center of blob
 xcal = 10
-ysize = 494 # needs to be adjusted to fit the picture
-xsize = 1310 
+ysize = 494  # needs to be adjusted to fit the picture
+xsize = 1310
 xstart = 300  # x startpoint
 
-btn_left = 13    # buttons
+# buttons
+btn_left = 13
 btn_right = 19
 btn_start = 16
 btn_stop = 26
@@ -139,6 +145,10 @@ def takePicture():
     oimage = image
     image = cv2.resize(image, (640, 480))
 
+# area size has to be set to identify the sprocket hole blob
+# if the sprocket hole area is around 2500, then 2000 should be a safe choice
+# the area size will trigger the exit from the loop
+
 
 def find_blob(area_size):
 
@@ -150,9 +160,11 @@ def find_blob(area_size):
     ret, thresh = cv2.threshold(gray_image, 200, 255, 0)
     im, contours, hierarchy = cv2.findContours(thresh, 1, 2)
 
+    # to see the part of the image with the sprocket hole -
+    # uncomment the next 2 lines
+    # waitkey(0) - picture is displayed until a key is pressed
     # cv2.imshow("Output",thresh)
     # cv2.waitKey(0)
-
 
     for l in range(10):  # if more contours are found, take the one that's area is >2000
         cnt = contours[l]

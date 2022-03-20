@@ -160,6 +160,12 @@ def find_blob(area_size):
     ret, thresh = cv2.threshold(gray_image, 200, 255, 0)
     im, contours, hierarchy = cv2.findContours(thresh, 1, 2)
 
+    # to see the part of the image with the sprocket hole -
+    # uncomment the next 2 lines
+    # waitkey(0) - picture is displayed until a key is pressed
+    # cv2.imshow("Output",thresh)
+    # cv2.waitKey(0)
+
     for l in range(10):
         cnt = contours[l]
         area = cv2.contourArea(cnt)
