@@ -150,9 +150,6 @@ def find_blob(area_size):
     ret, thresh = cv2.threshold(gray_image, 200, 255, 0)
     im, contours, hierarchy = cv2.findContours(thresh, 1, 2)
 
-    # cv2.imshow("Output",thresh)
-    # cv2.waitKey(0)
-
     for l in range(10):  # if more contours are found, take the one that's area is >2000
         cnt = contours[l]
         area = cv2.contourArea(cnt)
@@ -187,7 +184,8 @@ def calPic():
     find_blob(2000)
 
     LMP = int(cY * 3.2)+ycal  # x size of scanned image 2084 / 640
-    cv2.rectangle(img, (xstart+xcal, LMP-ysize), (xstart+xsize+xcal, LMP+ysize), (0, 255, 0), 50)
+    cv2.rectangle(img, (xstart+xcal, LMP-ysize),
+                  (xstart+xsize+xcal, LMP+ysize), (0, 255, 0), 50)
     cv2.imshow('Cal-Crop', img)
     cv2.waitKey(50)
 
@@ -344,8 +342,8 @@ if __name__ == '__main__':
 
                     if cY <= uptol and cY >= downtol:
 
-                        camera.capture('/home/pi/scanframes/scan' + ' - ' +
-                                       format(max_pic_num, '06') + '.jpg', use_video_port=True)
+                        camera.capture('/home/pi/scanframes/scan' + ' - '
+                                       + format(max_pic_num, '06') + '.jpg', use_video_port=True)
 
                         stepCW(step_count)
                         stepMinus = 0
