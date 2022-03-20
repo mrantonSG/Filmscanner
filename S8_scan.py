@@ -1,5 +1,9 @@
 #!/usr/bin/env python3.7
 
+# Version 2.0
+# March 20 2022
+
+
 import RPi.GPIO as GPIO
 from picamera import PiCamera
 from picamera.array import PiRGBArray
@@ -11,20 +15,22 @@ import glob
 import subprocess
 import sys
 
-
+# Stepper motor settings
 DIR = 27   # Direction GPIO Pin
 STEP = 22  # Step GPIO Pin
 CW = 1     # Clockwise Rotation
 CCW = 0    # Counterclockwise Rotation
 STEPON = 0  # pin to turn on/off the stepper
 
+# crop frame settings
 ycal = 50  # calibrate camera frame y position 0=center of blob
 xcal = 0
 ysize = 494  # needs to be adjusted to fit the picture
 xsize = 1310
 xstart = 290  # x startpoint
 
-btn_left = 13    # buttons
+# buttons
+btn_left = 13
 btn_right = 19
 btn_start = 16
 btn_stop = 26
@@ -38,7 +44,8 @@ pin_backward = 5
 step_count = 100  # steps per frame (S8)
 delay = .001  # delay inbetween steps
 
-midy = 240  # blob (S8)
+# blob settings
+midy = 240  # ideal blob position(S8)
 tolerance = 10  # pixel tolerance
 uptol = midy + tolerance
 downtol = midy - tolerance
@@ -138,18 +145,22 @@ def takePicture():
     oimage = image
     image = cv2.resize(image, (640, 480))
 
+# area size has to be set to identify the sprocket hole blob
+# if the sprocket hole area is around 2500, then 2000 should be a safe choice
+# the area size will trigger the exit from the loop
+
 
 def find_blob(area_size):
 
     global image, cY, M, area
 
-    #image = cv2.resize(image, (640, 480))
+    # image = cv2.resize(image, (640, 480))
     image = image[0:480, 40:80]  # [80:400, 40:80]
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     ret, thresh = cv2.threshold(gray_image, 200, 255, 0)
     im, contours, hierarchy = cv2.findContours(thresh, 1, 2)
 
-    for l in range(10):  # if more contours are found, take the one that's area is >2000
+    for l in range(10):
         cnt = contours[l]
         area = cv2.contourArea(cnt)
         print(area)
