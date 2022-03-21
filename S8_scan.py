@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.7
 
-# Version 2.0
-# March 20 2022
+# Version 2.0.1
+# March 21 2022
 
 
 import RPi.GPIO as GPIO
@@ -92,7 +92,6 @@ def motor_start():  # for spoolmotor
     if GPIO.input(photoint):
         pwm.start(10)
         # GPIO.output(pin_backward, GPIO.LOW)
-
     else:
         pwm.ChangeDutyCycle(0)
         # GPIO.output(pin_backward, GPIO.LOW)
@@ -137,7 +136,6 @@ def stop_scanner():
 
 
 def take_picture():
-
     global image, oimage
     rawCapture = PiRGBArray(camera)
     camera.capture(rawCapture, format="bgr")
@@ -151,10 +149,8 @@ def take_picture():
 
 
 def find_blob(area_size):
-
     global image, cY, M, area
-
-    image = image[0:480, 40:80]  # [80:400, 40:80]
+    image = image[0:480, 40:80]
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     ret, thresh = cv2.threshold(gray_image, 200, 255, 0)
     im, contours, hierarchy = cv2.findContours(thresh, 1, 2)
@@ -189,16 +185,12 @@ def endocv():
 
 
 def cal_pic():
-
     global image, randompic
-
     img = cv2.imread(scan_dir + randompic)
     print(randompic)
     image = cv2.resize(img, (640, 480))
-
     find_blob(2000)
-
-    LMP = int(cY * 3.2)+ycal  # x size of scanned image 2084 / 640
+    LMP = int(cY * 3.2)+ycal
     cv2.rectangle(img, (xstart+xcal, LMP-ysize),
                   (xstart+xsize+xcal, LMP+ysize), (0, 255, 0), 50)
     cv2.imshow('Cal-Crop', img)
@@ -206,17 +198,12 @@ def cal_pic():
 
 
 def crop_pic():
-
     global image
-
     img = cv2.imread(n)
     image = cv2.resize(img, (640, 480))
-
     find_blob(2000)
-
     LMP = int(cY * 3.2)+ycal
     img = img[LMP-ysize:LMP+ysize, xstart+xcal:xstart+xsize+xcal]
-
     cv2.imwrite(os.path.join(crop_path, n), img)
     cv2.waitKey(25)
     cv2.imshow('Cal-Crop', img)
@@ -237,20 +224,15 @@ def start_scanner():
 
 
 def cal_crop():
-
     global randompic, ycal, xcal, n, rewind
-
     xy = 1
-
     cv2.namedWindow('Cal-Crop', cv2.WINDOW_NORMAL)
     cv2.resizeWindow('Cal-Crop', 640, 480)
     randompic = random.choice(os.listdir('/home/pi/scanframes/'))
     cal_pic()
 
     while True:
-
         spool()
-
         if GPIO.input(btn_start) == GPIO.LOW:
             randompic = random.choice(os.listdir('/home/pi/scanframes/'))
             cal_pic()
