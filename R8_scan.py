@@ -57,7 +57,7 @@ crop_path = '/home/pi/cropframes/'
 
 step_minus = 0  # counter for stepper corrections
 step_plus = 0
-r = 0
+rewind = 0
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(DIR, GPIO.OUT)
@@ -88,7 +88,7 @@ def set_camera():
     sleep(2)
 
 
-def motorStart():  # for spoolmotor
+def motor_start():  # for spoolmotor
     if GPIO.input(photoint):
         pwm.start(10)
         #GPIO.output(pin_backward, GPIO.LOW)
@@ -98,12 +98,12 @@ def motorStart():  # for spoolmotor
         #GPIO.output(pin_backward, GPIO.LOW)
 
 
-def motorStop():
+def motor_stop():
     pwm.ChangeDutyCycle(0)
 
 
 def spool():
-    if r == 1:
+    if rewind == 1:
         GPIO.output(pin_forward, GPIO.HIGH)
         GPIO.output(pin_backward, GPIO.LOW)
     else:
@@ -111,7 +111,7 @@ def spool():
         GPIO.output(pin_backward, GPIO.LOW)
 
 
-def stepCW(steps):
+def step_cw(steps):
     for x in range(steps):
         GPIO.output(DIR, CW)
         GPIO.output(STEP, GPIO.HIGH)
@@ -120,7 +120,7 @@ def stepCW(steps):
         sleep(delay)
 
 
-def stepCCW(steps):
+def step_ccw(steps):
     for x in range(steps):
         GPIO.output(DIR, CCW)
         GPIO.output(STEP, GPIO.HIGH)
@@ -130,13 +130,13 @@ def stepCCW(steps):
 
 
 def stop_scanner():
-    motorStop()
+    motor_stop()
     GPIO.output(ledon, GPIO.LOW)
     GPIO.output(STEPON, GPIO.LOW)
     camera.stop_preview()
 
 
-def takePicture():
+def take_picture():
 
     global image, oimage
     rawCapture = PiRGBArray(camera)
@@ -154,7 +154,6 @@ def find_blob(area_size):
 
     global image, cY, M, area
 
-    #image = cv2.resize(image, (640, 480))
     image = image[240:480, 40:80]  # [80:400, 40:80]
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     ret, thresh = cv2.threshold(gray_image, 200, 255, 0)
@@ -189,7 +188,7 @@ def endocv():
         cv2.waitKey(1)
 
 
-def calPic():
+def cal_pic():
 
     global image, randompic
 
@@ -206,7 +205,7 @@ def calPic():
     cv2.waitKey(50)
 
 
-def cropPic():
+def crop_pic():
 
     global image
 
@@ -239,14 +238,14 @@ def start_scanner():
 
 def cal_crop():
 
-    global randompic, ycal, xcal, n, r
+    global randompic, ycal, xcal, n, rewind
 
     xy = 1
 
     cv2.namedWindow('Cal-Crop', cv2.WINDOW_NORMAL)
     cv2.resizeWindow('Cal-Crop', 640, 480)
     randompic = random.choice(os.listdir('/home/pi/scanframes/'))
-    calPic()
+    cal_pic()
 
     while True:
 
@@ -254,12 +253,12 @@ def cal_crop():
 
         if GPIO.input(btn_start) == GPIO.LOW:
             randompic = random.choice(os.listdir('/home/pi/scanframes/'))
-            calPic()
+            cal_pic()
             sleep(2)
             if GPIO.input(btn_start) == GPIO.LOW and GPIO.input(btn_right) == GPIO.LOW:
                 os.chdir(scan_dir)
                 for n in sorted(glob.glob('*.jpg')):
-                    cropPic()
+                    crop_pic()
                     print(n)
                     if GPIO.input(btn_stop) == GPIO.LOW:
                         endocv()
@@ -277,18 +276,18 @@ def cal_crop():
         if GPIO.input(btn_left) == GPIO.LOW:
             if xy == 1:
                 ycal += 10
-                calPic()
+                cal_pic()
             else:
                 xcal += 10
-                calPic()
+                cal_pic()
 
         if GPIO.input(btn_right) == GPIO.LOW:
             if xy == 1:
                 ycal -= 10
-                calPic()
+                cal_pic()
             else:
                 xcal -= 10
-                calPic()
+                cal_pic()
 
         if GPIO.input(btn_stop) == GPIO.LOW:
             if xy == 1:
@@ -303,10 +302,10 @@ def cal_crop():
                 sys.exit(0)
 
         if GPIO.input(btn_rewind) == GPIO.LOW:
-            if r == 0:
-                r += 1
+            if rewind == 0:
+                rewind += 1
             else:
-                r -= 1
+                rewind -= 1
 
 
 if __name__ == '__main__':
@@ -318,28 +317,28 @@ if __name__ == '__main__':
         while True:
 
             spool()
-            motorStart()
+            motor_start()
 
             if GPIO.input(btn_right) == GPIO.LOW:  # step to adjust frame
-                stepCW(tolstep)
+                step_cw(tolstep)
                 sleep(0.05)
 
             if GPIO.input(btn_left) == GPIO.LOW:  # step to adjust frame
-                stepCCW(tolstep)
+                step_ccw(tolstep)
                 sleep(0.05)
 
             if GPIO.input(btn_rewind) == GPIO.LOW:  # rewind
 
-                if r == 0:
-                    r += 1
+                if rewind == 0:
+                    rewind += 1
                 else:
-                    r -= 1
+                    rewind -= 1
 
             if GPIO.input(btn_start) == GPIO.LOW:  # start recording
 
                 while GPIO.input(btn_stop):
-                    motorStart()
-                    takePicture()
+                    motor_start()
+                    take_picture()
                     find_blob(400)
 
                     if area > 8000:  # end of film
@@ -347,12 +346,12 @@ if __name__ == '__main__':
                         cal_crop()
 
                     if cY > uptol:
-                        stepCW(tolstep)
+                        step_cw(tolstep)
                         step_minus += 1
                         print(step_minus)
 
                     if cY < downtol:
-                        stepCCW(tolstep)
+                        step_ccw(tolstep)
                         step_plus += 1
                         print(step_plus)
 
@@ -361,7 +360,7 @@ if __name__ == '__main__':
                         camera.capture('/home/pi/scanframes/scan' + ' - '
                                        + format(max_pic_num, '06') + '.jpg', use_video_port=True)
 
-                        stepCW(step_count)
+                        step_cw(step_count)
                         step_minus = 0
                         step_plus = 0
                         max_pic_num += 1
